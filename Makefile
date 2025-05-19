@@ -1,5 +1,8 @@
+env:
+	copy .env.example .env
+
 run:
 	go run main.go
 
-env:
-	copy .env.example .env
+seed:
+	go run cmd/seed/main.go
