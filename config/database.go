@@ -68,8 +68,8 @@ func SyncDB() {
 	log.Println("Sincronizando modelos con la base de datos...")
 	models := []interface{}{
 		&schema.User{},
-		&schema.Documento{},
-		&schema.Proyecto{},
+		&schema.Document{},
+		&schema.Project{},
 	}
 
 	err := DB.AutoMigrate(models...)

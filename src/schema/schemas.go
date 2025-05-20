@@ -6,32 +6,32 @@ import (
 
 type User struct {
 	gorm.Model
-	Nombre     string `gorm:"type:varchar(255)"`
-	Correo     string `gorm:"type:varchar(255);uniqueIndex"`
-	Contraseña string `gorm:"type:varchar(255)"`
+	Name     string `gorm:"type:varchar(255)"`
+	Email    string `gorm:"type:varchar(255);uniqueIndex"`
+	Password string `gorm:"type:varchar(255)"`
 
-	Documentos []Documento `gorm:"foreignKey:UsuarioID"`
-	Proyectos  []Proyecto  `gorm:"foreignKey:UsuarioID"`
+	Documents []Document `gorm:"foreignKey:UserID"`
+	Projects  []Project  `gorm:"foreignKey:UserID"`
 }
 
-type Documento struct {
+type Document struct {
 	gorm.Model
-	UsuarioID uint
-	Nombre    string `gorm:"type:varchar(255)"`
-	Direccion string `gorm:"type:varchar(500)"`
-	Resumen   string `gorm:"type:text"`
-	Mimetype  string `gorm:"type:varchar(100)"`
-	Peso      float64
+	UserID   uint
+	Name     string `gorm:"type:varchar(255)"`
+	Path     string `gorm:"type:varchar(500)"`
+	Resume   string `gorm:"type:text"`
+	Mimetype string `gorm:"type:varchar(100)"`
+	Size     float64
 
-	Usuario   User        `gorm:"foreignKey:UsuarioID"`
-	Proyectos []*Proyecto `gorm:"many2many:documento_proyecto;"`
+	User     User       `gorm:"foreignKey:UserID"`
+	Projects []*Project `gorm:"many2many:document_project;"`
 }
 
-type Proyecto struct {
+type Project struct {
 	gorm.Model
-	UsuarioID uint
-	Nombre    string `gorm:"type:varchar(255)"`
-	Usuario   User   `gorm:"foreignKey:UsuarioID"`
+	UserID uint
+	Name   string `gorm:"type:varchar(255)"`
+	User   User   `gorm:"foreignKey:UserID"`
 
-	Documentos []*Documento `gorm:"many2many:documento_proyecto;"`
+	Documents []*Document `gorm:"many2many:document_project;"`
 }

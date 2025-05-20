@@ -1,12 +1,13 @@
 package main
 
 import (
-	//"fmt"
+	"net/http"
+
 	"github.com/V-enekoder/backendTutorIA/config"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	//"os"
+
+	"github.com/V-enekoder/backendTutorIA/src/user"
 )
 
 func init() {
@@ -23,5 +24,7 @@ func main() {
 			"message": "pong",
 		})
 	})
+	user.RegisterRoutes(r)
+
 	r.Run()
 }

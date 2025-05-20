@@ -43,7 +43,7 @@ func seedDatabase(db *gorm.DB) error {
 	log.Println("Users seeded.")
 
 	// Seed Proyectos
-	proyectos, err := seedProyectos(db, users)
+	proyectos, err := seedProjects(db, users)
 	if err != nil {
 		log.Printf("Error seeding proyectos: %v", err)
 		return err
@@ -51,7 +51,7 @@ func seedDatabase(db *gorm.DB) error {
 	log.Println("Proyectos seeded.")
 
 	// Seed Documentos y asociarlos a proyectos
-	_, err = seedDocumentos(db, users, proyectos)
+	_, err = seedDocuments(db, users, proyectos)
 	if err != nil {
 		log.Printf("Error seeding documentos: %v", err)
 		return err
@@ -61,11 +61,8 @@ func seedDatabase(db *gorm.DB) error {
 	return nil
 }
 
-// --- Funciones de Seeder ---
-
-// Función para hashear contraseñas
 func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
@@ -74,19 +71,19 @@ func seedUsers(db *gorm.DB, hashedPassword string) ([]schema.User, error) {
 	gofakeit.Seed(0)
 
 	usersToCreate := []schema.User{
-		{Nombre: gofakeit.Name(), Correo: gofakeit.Email(), Contraseña: hashedPassword},
-		{Nombre: gofakeit.Name(), Correo: gofakeit.Email(), Contraseña: hashedPassword},
-		{Nombre: "Usuario Ejemplo", Correo: "ejemplo@test.com", Contraseña: hashedPassword},
+		{Name: gofakeit.Name(), Email: gofakeit.Email(), Password: hashedPassword},
+		{Name: gofakeit.Name(), Email: gofakeit.Email(), Password: hashedPassword},
+		{Name: "Usuario Ejemplo", Email: "ejemplo@test.com", Password: hashedPassword},
 	}
 
 	createdUsers := []schema.User{}
 	for _, user := range usersToCreate {
 		var existingUser schema.User
 		// Buscamos o creamos por correo
-		result := db.Where(schema.User{Correo: user.Correo}).FirstOrCreate(&existingUser, user)
+		result := db.Where(schema.User{Email: user.Email}).FirstOrCreate(&existingUser, user)
 		if result.Error != nil {
-			log.Printf("Error creating or finding user %s: %v", user.Correo, result.Error)
-			return nil, fmt.Errorf("failed to seed user with email %s: %w", user.Correo, result.Error)
+			log.Printf("Error creating or finding user %s: %v", user.Email, result.Error)
+			return nil, fmt.Errorf("failed to seed user with email %s: %w", user.Email, result.Error)
 		}
 		createdUsers = append(createdUsers, existingUser)
 	}
@@ -95,27 +92,29 @@ func seedUsers(db *gorm.DB, hashedPassword string) ([]schema.User, error) {
 }
 
 // Seeder para Proyectos
-func seedProyectos(db *gorm.DB, users []schema.User) ([]schema.Proyecto, error) {
+func seedProjects(db *gorm.DB, users []schema.User) ([]schema.Project, error) {
 	if len(users) == 0 {
 		log.Println("No users provided to seed proyectos.")
 		return nil, nil
 	}
 	gofakeit.Seed(0)
 
-	proyectosToCreate := []schema.Proyecto{
-		{Nombre: "Proyecto Alpha", UsuarioID: users[0].ID},     // Asignar al primer usuario
-		{Nombre: "Investigación Beta", UsuarioID: users[1].ID}, // Asignar al segundo usuario
+	proyectosToCreate := []schema.Project{
+		{Name: "Proyecto Alpha", UserID: users[0].ID},
+		{Name: "Investigación Beta", UserID: users[1].ID},
 	}
 	if len(users) > 2 {
-		proyectosToCreate = append(proyectosToCreate, schema.Proyecto{Nombre: "Planificación Gamma", UsuarioID: users[2].ID})
+		proyectosToCreate = append(proyectosToCreate, schema.Project{
+			Name:   "Planificación Gamma",
+			UserID: users[2].ID})
 	}
 
-	createdProyectos := []schema.Proyecto{}
+	createdProyectos := []schema.Project{}
 	for _, proyecto := range proyectosToCreate {
 		result := db.Create(&proyecto)
 		if result.Error != nil {
-			log.Printf("Error creating proyecto %s: %v", proyecto.Nombre, result.Error)
-			return nil, fmt.Errorf("failed to seed project %s: %w", proyecto.Nombre, result.Error)
+			log.Printf("Error creating proyecto %s: %v", proyecto.Name, result.Error)
+			return nil, fmt.Errorf("failed to seed project %s: %w", proyecto.Name, result.Error)
 		}
 		createdProyectos = append(createdProyectos, proyecto)
 	}
@@ -123,52 +122,52 @@ func seedProyectos(db *gorm.DB, users []schema.User) ([]schema.Proyecto, error) 
 }
 
 // Seeder para Documentos
-func seedDocumentos(db *gorm.DB, users []schema.User, proyectos []schema.Proyecto) ([]schema.Documento, error) {
+func seedDocuments(db *gorm.DB, users []schema.User, proyectos []schema.Project) ([]schema.Document, error) {
 	if len(users) == 0 {
 		log.Println("No users provided to seed documentos.")
 		return nil, nil
 	}
 	gofakeit.Seed(0)
 
-	documentosToCreate := []schema.Documento{
+	documentosToCreate := []schema.Document{
 		{
-			Nombre:    "prueba.txt",
-			Direccion: "src/documents/prueba.txt",
-			Resumen:   gofakeit.LoremIpsumSentence(15),
-			Mimetype:  "text/plain",
-			Peso:      0.5,
-			UsuarioID: users[0].ID,
+			Name:     "prueba.txt",
+			Path:     "src/documents/prueba.txt",
+			Resume:   gofakeit.LoremIpsumSentence(15),
+			Mimetype: "text/plain",
+			Size:     0.5,
+			UserID:   users[0].ID,
 		},
 		{
-			Nombre:    "informe_final.pdf",
-			Direccion: "src/documents/informe_final.pdf",
-			Resumen:   gofakeit.LoremIpsumParagraph(2, 5, 10, " "),
-			Mimetype:  "application/pdf",
-			Peso:      2.3,
-			UsuarioID: users[1].ID,
+			Name:     "informe_final.pdf",
+			Path:     "src/documents/informe_final.pdf",
+			Resume:   gofakeit.LoremIpsumParagraph(2, 5, 10, " "),
+			Mimetype: "application/pdf",
+			Size:     2.3,
+			UserID:   users[1].ID,
 		},
 	}
 
-	createdDocumentos := []schema.Documento{}
+	createdDocumentos := []schema.Document{}
 	for i, doc := range documentosToCreate {
 		result := db.Create(&doc)
 		if result.Error != nil {
-			return nil, fmt.Errorf("Error creating documento %s: %v", doc.Nombre, result.Error)
+			return nil, fmt.Errorf("Error creating documento %s: %v", doc.Name, result.Error)
 		}
 
 		if len(proyectos) > 0 {
 			if i == 0 && len(proyectos) > 0 {
-				if err := db.Model(&proyectos[0]).Association("Documentos").Append(&doc); err != nil {
-					log.Printf("Error associating documento %s to proyecto %s: %v", doc.Nombre, proyectos[0].Nombre, err)
+				if err := db.Model(&proyectos[0]).Association("Documents").Append(&doc); err != nil {
+					log.Printf("Error associating documento %s to proyecto %s: %v", doc.Name, proyectos[0].Name, err)
 				}
 			}
 			if i == 1 && len(proyectos) > 0 {
-				if err := db.Model(&proyectos[0]).Association("Documentos").Append(&doc); err != nil {
-					log.Printf("Error associating documento %s to proyecto %s: %v", doc.Nombre, proyectos[0].Nombre, err)
+				if err := db.Model(&proyectos[0]).Association("Documents").Append(&doc); err != nil {
+					log.Printf("Error associating documento %s to proyecto %s: %v", doc.Name, proyectos[0].Name, err)
 				}
 				if len(proyectos) > 1 {
-					if err := db.Model(&proyectos[1]).Association("Documentos").Append(&doc); err != nil {
-						log.Printf("Error associating documento %s to proyecto %s: %v", doc.Nombre, proyectos[1].Nombre, err)
+					if err := db.Model(&proyectos[1]).Association("Documents").Append(&doc); err != nil {
+						log.Printf("Error associating documento %s to proyecto %s: %v", doc.Name, proyectos[1].Name, err)
 					}
 				}
 			}
