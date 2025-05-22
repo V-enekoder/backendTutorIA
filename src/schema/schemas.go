@@ -28,10 +28,15 @@ type Document struct {
 }
 
 type Project struct {
-	gorm.Model
-	UserID uint
-	Name   string `gorm:"type:varchar(255)"`
-	User   User   `gorm:"foreignKey:UserID"`
+    gorm.Model
+    UserID    uint     // Clave foránea a User
+    Name      string   `gorm:"type:varchar(255)"`  
+    Address   string   `gorm:"type:text"`           // <- Añade este campo
+    Summary   string   `gorm:"type:text"`           // <- Añade este campo
+    MimeType  string   `gorm:"type:varchar(100)"`   // <- Añade este campo
+    FileSize  float64  // <- Añade este campo
 
-	Documents []*Document `gorm:"many2many:document_project;"`
+    // Relaciones
+    User      User      `gorm:"foreignKey:UserID"` 
+    Documents []Document `gorm:"many2many:document_project;"` // Relación muchos-a-muchos
 }
