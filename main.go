@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/V-enekoder/backendTutorIA/src/user"
+	"github.com/V-enekoder/backendTutorIA/src/project"
 )
 
 func init() {
@@ -25,6 +26,7 @@ func main() {
 		})
 	})
 	user.RegisterRoutes(r)
+	project.RegisterRoutes(r)
 
 	r.Run()
 }
