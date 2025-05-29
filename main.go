@@ -9,6 +9,7 @@ import (
 
 	"github.com/V-enekoder/backendTutorIA/src/user"
 	"github.com/V-enekoder/backendTutorIA/src/project"
+	"github.com/V-enekoder/backendTutorIA/src/tutor"
 )
 
 func init() {
@@ -18,6 +19,7 @@ func init() {
 }
 
 func main() {
+	tutor.Communication()
 	r := gin.Default()
 	r.Use(cors.Default())
 	r.GET("/ping", func(c *gin.Context) {
