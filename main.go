@@ -7,8 +7,9 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"github.com/V-enekoder/backendTutorIA/src/user"
+	"github.com/V-enekoder/backendTutorIA/src/chat"
 	"github.com/V-enekoder/backendTutorIA/src/project"
+	"github.com/V-enekoder/backendTutorIA/src/user"
 )
 
 func init() {
@@ -27,6 +28,7 @@ func main() {
 	})
 	user.RegisterRoutes(r)
 	project.RegisterRoutes(r)
+	chat.RegisterRoutes(r)
 
 	r.Run()
 }

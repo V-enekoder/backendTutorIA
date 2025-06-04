@@ -8,6 +8,7 @@ import (
 
 func LoadEnv() {
 	if err := godotenv.Load(".env"); err != nil {
-		log.Print("Debes crear un archivo .env en la raíz del proyecto")
+		log.Fatalf("Error al cargar el archivo .env: %s. Asegúrate de que exista en la raíz del proyecto.", err)
 	}
+	log.Println(".env cargado correctamente")
 }
