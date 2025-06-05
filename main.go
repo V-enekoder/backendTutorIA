@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/V-enekoder/backendTutorIA/src/chat"
+	"github.com/V-enekoder/backendTutorIA/src/document"
 	"github.com/V-enekoder/backendTutorIA/src/project"
 	"github.com/V-enekoder/backendTutorIA/src/user"
 )
@@ -29,6 +30,6 @@ func main() {
 	user.RegisterRoutes(r)
 	project.RegisterRoutes(r)
 	chat.RegisterRoutes(r)
-
+	document.RegisterRoutes(r)
 	r.Run()
 }
