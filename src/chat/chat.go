@@ -7,3 +7,12 @@ type PromptRequest struct {
 type GeminiResponse struct {
 	Response string `json:"response"`
 }
+
+type FilePromptRequest struct {
+	Prompt string `form:"prompt" binding:"required"`
+}
+
+type GeminiFileData struct {
+	MIMEType string
+	Data     []byte
+}
