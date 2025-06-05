@@ -6,6 +6,7 @@ import (
 
 	"github.com/V-enekoder/backendTutorIA/src/schema"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func CreateUserService(userDTO UserCreateDTO) (uint, error) {
@@ -41,10 +42,26 @@ func UserExistsByFieldService(field string, value interface{}, excludeId uint) (
 func HandleUniquenessError(type_ string) error {
 	switch type_ {
 	case "email":
-		return errors.New("Correo ya registrado")
+		return errors.New("correo ya registrado")
 	default:
 		return nil
 	}
+}
+
+func LoginService(loginDTO UserLoginDTO) error {
+	user, err := GetUserByEmailRepository(loginDTO.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("credenciales inválidas")
+		}
+		return err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginDTO.Password))
+	if err != nil {
+		return errors.New("credenciales inválidas")
+	}
+	return nil
 }
 
 func GetUserByIdService(id uint) (UserResponseDTO, error) {

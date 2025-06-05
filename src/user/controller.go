@@ -29,6 +29,22 @@ func CreateUserController(c *gin.Context) {
 
 }
 
+func LoginController(c *gin.Context) {
+	var loginDTO UserLoginDTO
+	if err := c.ShouldBindJSON(&loginDTO); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email y contraseña son requeridos y deben ser válidos"})
+		return
+	}
+
+	// Llama al servicio de login para validar las credenciales.
+	err := LoginService(loginDTO)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Inicio de sesión exitoso"})
+}
+
 func handleExceptions(err error) (int, string) {
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):

@@ -17,6 +17,17 @@ func CreateUserRepository(user schema.User) (uint, error) {
 	return user.ID, nil
 }
 
+func GetUserByEmailRepository(email string) (schema.User, error) {
+	db := config.DB
+	var user schema.User
+
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
 func GetUserByIdRepository(id uint) (schema.User, error) {
 	db := config.DB
 	var user schema.User
