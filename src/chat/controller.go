@@ -25,7 +25,7 @@ func ProcessPromptController(c *gin.Context) {
 	}
 
 	// PASO 3: Llamar al servicio con los datos de ambos structs.
-	geminiTextResponse, err := ProcessPromptService(promptBody.Prompt, uriParams.ID)
+	geminiTextResponse, err := ProcessPromptService(promptBody.Prompt, uriParams)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -54,7 +54,7 @@ func ProcessPromptWithFileController(c *gin.Context) {
 	if err != nil {
 		if err == http.ErrMissingFile {
 
-			geminiTextResponse, err := ProcessPromptService(prompt, uriParams.ID)
+			geminiTextResponse, err := ProcessPromptService(prompt, uriParams)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
@@ -96,11 +96,25 @@ func ProcessPromptWithFileController(c *gin.Context) {
 		Data:     fileBytes,
 	}
 
-	geminiTextResponse, err := ProcessPromptWithFileService(c.Request.Context(), prompt, fileDataPart, uriParams.ID)
+	geminiTextResponse, err := ProcessPromptWithFileService(c.Request.Context(), prompt, fileDataPart, uriParams)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, GeminiResponse{Response: geminiTextResponse})
+}
+func GetChatHistoryController(c *gin.Context) {
+	var params UriParams
+	if err := c.ShouldBindUri(&params); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Parámetros de URL inválidos: " + err.Error()})
+		return
+	}
+
+	chatHistory, err := GetChatHistoryService(params.UserID, params.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo recuperar el historial del chat."})
+		return
+	}
+	c.JSON(http.StatusOK, chatHistory)
 }

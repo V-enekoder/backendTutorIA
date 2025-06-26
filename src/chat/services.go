@@ -8,12 +8,13 @@ import (
 	"strings"
 
 	"github.com/V-enekoder/backendTutorIA/config"
+	"github.com/V-enekoder/backendTutorIA/src/schema"
 
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
 )
 
-func ProcessPromptService(promptText string, id_context int) (string, error) {
+func ProcessPromptService(promptText string, uri UriParams) (string, error) {
 	apiKey := config.GetGeminiAPIKey()
 
 	ctx := context.Background()
@@ -28,14 +29,14 @@ func ProcessPromptService(promptText string, id_context int) (string, error) {
 
 	finalPrompt := promptText
 
-	if id_context >= 1 && id_context <= len(promptContexts) {
-		contextIndex := id_context - 1
+	if uri.ID >= 1 && uri.ID <= uint(len(promptContexts)) {
+		contextIndex := uri.ID - 1
 		contextText := promptContexts[contextIndex]
 		finalPrompt = fmt.Sprintf("Instrucción de contexto: %s\n\n---\n\nPregunta del usuario: %s. En la respuesta omite los saltos de línea y otros caracteres no visibles. Y los asteriscos y otros elementos de markdown.", contextText, promptText)
-		log.Printf("ID %d válido. Se ha añadido el contexto: '%s'", id_context, contextText)
+		log.Printf("ID %d válido. Se ha añadido el contexto: '%s'", uri.ID, contextText)
 	} else {
 		// Si el ID no es válido (ej: 0, -1, 21, etc.), simplemente informamos y continuamos sin el contexto.
-		log.Printf("ID %d fuera de rango [1-%d]. Se usará el prompt sin contexto adicional.", id_context, len(promptContexts))
+		log.Printf("ID %d fuera de rango [1-%d]. Se usará el prompt sin contexto adicional.", uri.ID, len(promptContexts))
 	}
 
 	resp, err := model.GenerateContent(ctx, genai.Text(finalPrompt))
@@ -54,6 +55,17 @@ func ProcessPromptService(promptText string, id_context int) (string, error) {
 	} else {
 		log.Println("Respuesta de Gemini vacía o inesperada")
 		return "", errors.New("respuesta vacía o inesperada de Gemini")
+	}
+
+	chat := schema.Chat{
+		UserID:    uri.UserID,
+		ContextID: uri.ID,
+		Prompt:    promptText,
+		Response:  responseBuilder.String(),
+	}
+	if err := CreateChatRepository(chat); err != nil {
+		log.Printf("Error guardando el chat en la base de datos: %v", err)
+		return "", errors.New("error al guardar el chat en la base de datos")
 	}
 
 	return responseBuilder.String(), nil
@@ -93,7 +105,7 @@ var promptContexts = []string{
 	"Ayuda al usuario a crear un 'título de trabajo' o tentativo. Este título no tiene que ser perfecto, pero debe capturar la esencia de lo que se quiere investigar para empezar a trabajar. Responde siempre en español.",
 }
 
-func ProcessPromptWithFileService(ctx context.Context, promptText string, fileData *GeminiFileData, id_context int) (string, error) {
+func ProcessPromptWithFileService(ctx context.Context, promptText string, fileData *GeminiFileData, uri UriParams) (string, error) {
 	if fileData == nil || len(fileData.Data) == 0 {
 		return "", errors.New("ProcessPromptWithFileService requiere datos de archivo válidos")
 	}
@@ -119,15 +131,15 @@ func ProcessPromptWithFileService(ctx context.Context, promptText string, fileDa
 
 	finalPrompt := promptText
 
-	if id_context >= 1 && id_context <= len(promptContexts) {
-		contextIndex := id_context - 1
+	if uri.ID >= 1 && uri.ID <= uint(len(promptContexts)) {
+		contextIndex := uri.ID - 1
 		contextText := promptContexts[contextIndex]
 
 		finalPrompt = fmt.Sprintf("Instrucción de contexto: %s\n\n---\n\nPregunta del usuario: %s. En la respuesta omite los saltos de línea"+
 			"y otros caracteres no visibles. Y los asteriscos y otros elementos de markdown.", contextText, promptText)
-		log.Printf("ID %d válido. Se ha añadido el contexto: '%s'", id_context, contextText)
+		log.Printf("ID %d válido. Se ha añadido el contexto: '%s'", uri.ID, contextText)
 	} else {
-		log.Printf("ID %d fuera de rango [1-%d]. Se usará el prompt sin contexto adicional.", id_context, len(promptContexts))
+		log.Printf("ID %d fuera de rango [1-%d]. Se usará el prompt sin contexto adicional.", uri.ID, len(promptContexts))
 	}
 
 	var parts []genai.Part
@@ -152,6 +164,17 @@ func ProcessPromptWithFileService(ctx context.Context, promptText string, fileDa
 		return "", errors.New("respuesta vacía o inesperada de Gemini")
 	}
 
+	chat := schema.Chat{
+		UserID:    uri.UserID,
+		ContextID: uri.ID,
+		Prompt:    promptText,
+		Response:  responseBuilder.String(),
+	}
+	if err := CreateChatRepository(chat); err != nil {
+		log.Printf("Error guardando el chat en la base de datos: %v", err)
+		return "", errors.New("error al guardar el chat en la base de datos")
+	}
+
 	return responseBuilder.String(), nil
 }
 
@@ -167,4 +190,23 @@ func determineMIMETypeService(filename string) string {
 	}
 
 	return ""
+}
+
+func GetChatHistoryService(userID uint, contextID uint) ([]ChatResponseDTO, error) {
+	chats, err := GetChatsByUserIDAndContextIDRepository(userID, contextID)
+	if err != nil {
+		log.Printf("Error al obtener el historial del chat desde el repositorio: %v", err)
+		return nil, err // Devuelve el error para que el controlador lo maneje.
+	}
+	var chatDTOs []ChatResponseDTO
+	for _, chat := range chats {
+		chatDTOs = append(chatDTOs, ChatResponseDTO{
+			ID:        chat.ID,
+			Prompt:    chat.Prompt,
+			Response:  chat.Response,
+			CreatedAt: chat.CreatedAt,
+		})
+	}
+
+	return chatDTOs, nil
 }
