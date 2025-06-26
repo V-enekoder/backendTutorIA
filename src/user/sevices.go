@@ -48,20 +48,20 @@ func HandleUniquenessError(type_ string) error {
 	}
 }
 
-func LoginService(loginDTO UserLoginDTO) error {
+func LoginService(loginDTO UserLoginDTO) (uint, error) {
 	user, err := GetUserByEmailRepository(loginDTO.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("credenciales inválidas")
+			return 0, errors.New("credenciales inválidas")
 		}
-		return err
+		return 0, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginDTO.Password))
 	if err != nil {
-		return errors.New("credenciales inválidas")
+		return 0, errors.New("credenciales inválidas")
 	}
-	return nil
+	return user.ID, nil
 }
 
 func GetUserByIdService(id uint) (UserResponseDTO, error) {

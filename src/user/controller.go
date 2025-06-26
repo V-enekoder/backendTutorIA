@@ -36,13 +36,13 @@ func LoginController(c *gin.Context) {
 		return
 	}
 
-	// Llama al servicio de login para validar las credenciales.
-	err := LoginService(loginDTO)
+	userId, err := LoginService(loginDTO)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Inicio de sesión exitoso"})
+	c.JSON(http.StatusOK, gin.H{"message": "Inicio de sesión exitoso",
+		"id": userId})
 }
 
 func handleExceptions(err error) (int, string) {
