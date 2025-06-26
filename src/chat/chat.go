@@ -1,15 +1,19 @@
 package chat
 
-type PromptRequest struct {
-	Prompt string `json:"prompt" binding:"required"`
+type UriParams struct {
+	ID int `uri:"id" binding:"required,min=1,max=17"`
 }
 
+type PromptBody struct {
+	Prompt string `json:"prompt" binding:"required"`
+}
 type GeminiResponse struct {
 	Response string `json:"response"`
 }
 
 type FilePromptRequest struct {
-	Prompt string `form:"prompt" binding:"required"`
+	ID_context int    `uri:"id" binding:"required,min=1,max=20"`
+	Prompt     string `form:"prompt" binding:"required"`
 }
 
 type GeminiFileData struct {
