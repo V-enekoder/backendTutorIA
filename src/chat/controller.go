@@ -53,7 +53,15 @@ func ProcessPromptWithFileController(c *gin.Context) {
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
 		if err == http.ErrMissingFile {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "No se subió ningún archivo con el nombre de campo 'file'."})
+
+			geminiTextResponse, err := ProcessPromptService(prompt, uriParams.ID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(http.StatusOK, GeminiResponse{Response: geminiTextResponse})
+
 			return
 		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error al obtener el archivo: " + err.Error()})
