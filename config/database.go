@@ -70,6 +70,7 @@ func SyncDB() {
 		&schema.User{},
 		&schema.Document{},
 		&schema.Project{},
+		&schema.Chat{},
 	}
 
 	err := DB.AutoMigrate(models...)
